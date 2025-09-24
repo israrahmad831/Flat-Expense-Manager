@@ -64,7 +64,13 @@ export default function SignUpPage() {
         }, 2000)
       } else {
         const errorData = await response.json()
-        setError(errorData.error || "Failed to create account")
+        if (errorData.provider === "google") {
+          setError("This email is already registered with Google. Please sign in with Google instead.")
+        } else if (errorData.provider === "credentials") {
+          setError("This email is already registered. Please sign in with your email and password.")
+        } else {
+          setError(errorData.error || "Failed to create account")
+        }
       }
     } catch {
       setError("An unexpected error occurred")
@@ -76,9 +82,19 @@ export default function SignUpPage() {
   const handleGoogleSignUp = async () => {
     setIsLoading(true)
     try {
-      await signIn("google", { callbackUrl: "/dashboard" })
+      const result = await signIn("google", { 
+        callbackUrl: "/dashboard",
+        redirect: false 
+      })
+      
+      if (result?.error) {
+        setError("Failed to sign up with Google")
+      } else if (result?.url) {
+        router.push(result.url)
+      }
     } catch {
       setError("Failed to sign up with Google")
+    } finally {
       setIsLoading(false)
     }
   }

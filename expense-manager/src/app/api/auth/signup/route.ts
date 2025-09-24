@@ -23,10 +23,26 @@ export async function POST(request: NextRequest) {
     // Check if user already exists
     const existingUser = await users.findOne({ email })
     if (existingUser) {
-      return NextResponse.json(
-        { error: "User with this email already exists" },
-        { status: 400 }
-      )
+      // Check if user signed up with Google
+      if (existingUser.googleId && !existingUser.password) {
+        return NextResponse.json(
+          { 
+            error: "An account with this email already exists via Google. Please sign in with Google instead.", 
+            provider: "google" 
+          },
+          { status: 400 }
+        )
+      }
+      // Check if user signed up with email/password
+      if (existingUser.password) {
+        return NextResponse.json(
+          { 
+            error: "An account with this email already exists. Please sign in with your email and password.", 
+            provider: "credentials" 
+          },
+          { status: 400 }
+        )
+      }
     }
 
     // Hash password

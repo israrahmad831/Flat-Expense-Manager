@@ -59,9 +59,19 @@ export default function SignInPage() {
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
     try {
-      await signIn("google", { callbackUrl: "/dashboard" })
+      const result = await signIn("google", { 
+        callbackUrl: "/dashboard",
+        redirect: false 
+      })
+      
+      if (result?.error) {
+        setError("Failed to sign in with Google")
+      } else if (result?.url) {
+        router.push(result.url)
+      }
     } catch {
       setError("Failed to sign in with Google")
+    } finally {
       setIsLoading(false)
     }
   }
