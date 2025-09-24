@@ -1,60 +1,120 @@
 "use client"
 
-import { useSession, signOut } from "next-auth/react"
+import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Plus, DollarSign, Users, TrendingUp, LogOut, User, Settings } from "lucide-react"
+import { ArrowUpCircle, ArrowDownCircle, CreditCard, Plus, Wallet, ArrowLeftRight, Users, Settings, DollarSign, User, TrendingUp, LogOut, List } from "lucide-react"
+import { signOut } from "next-auth/react"
 
-interface Expense {
+interface Wallet {
+  _id: string
+  name: string
+  balance: number
+  currency: string
+  isDefault?: boolean
+  color?: string
+  icon?: string
+  description?: string
+}
+
+interface Transaction {
   _id: string
   title: string
   amount: number
-  category: string
-  description?: string
+  type: "income" | "expense" | "transfer"
+  categoryId: string
+  walletId: string
   date: string
-  createdBy: string
-  participants: string[]
-  createdAt: string
+}
+
+interface Category {
+  _id: string
+  name: string
+  type: "income" | "expense"
+  icon: string
+  color: string
 }
 
 export default function Dashboard() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [expenses, setExpenses] = useState<Expense[]>([])
+  const [wallets, setWallets] = useState<Wallet[]>([])
+  const [selectedWallet, setSelectedWallet] = useState<Wallet | null>(null)
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
-  const [showAddExpense, setShowAddExpense] = useState(false)
+  const [showCreateWallet, setShowCreateWallet] = useState(false)
+  const [newWallet, setNewWallet] = useState({
+    name: "",
+    currency: "PKR",
+    balance: 0,
+    description: "",
+    color: "#3B82F6",
+    icon: "💰"
+  })
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/auth/signin")
     } else if (status === "authenticated") {
-      fetchExpenses()
+      fetchData()
     }
   }, [status, router])
 
-  const fetchExpenses = async () => {
+  const fetchData = async () => {
+    setLoading(true)
     try {
-      const response = await fetch("/api/expenses")
-      if (response.ok) {
-        const data = await response.json()
-        setExpenses(data.expenses || [])
+      const [walletsRes, transactionsRes, categoriesRes] = await Promise.all([
+        fetch("/api/wallets"),
+        fetch("/api/transactions?limit=20"),
+        fetch("/api/categories")
+      ])
+
+      if (walletsRes.ok) {
+        const data = await walletsRes.json()
+        setWallets(data.wallets || [])
+        if (data.wallets?.length > 0 && !selectedWallet) {
+          setSelectedWallet(data.wallets[0])
+        }
+      }
+
+      if (transactionsRes.ok) {
+        const data = await transactionsRes.json()
+        setTransactions(data.transactions || [])
+      }
+
+      if (categoriesRes.ok) {
+        const data = await categoriesRes.json()
+        setCategories(data.categories || [])
       }
     } catch (error) {
-      console.error("Failed to fetch expenses:", error)
+      console.error("Error fetching data:", error)
     } finally {
       setLoading(false)
     }
   }
 
-  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0)
-  const monthlyExpenses = expenses.filter(expense => {
-    const expenseDate = new Date(expense.date)
+  // Calculate totals from transactions
+  const totalBalance = wallets.reduce((sum, wallet) => sum + wallet.balance, 0)
+  
+  const totalIncome = transactions
+    .filter(t => t.type === "income")
+    .reduce((sum, t) => sum + t.amount, 0)
+    
+  const totalExpenses = transactions
+    .filter(t => t.type === "expense")
+    .reduce((sum, t) => sum + t.amount, 0)
+  
+  const monthlyExpenses = transactions.filter(transaction => {
+    const transactionDate = new Date(transaction.date)
     const now = new Date()
-    return expenseDate.getMonth() === now.getMonth() && expenseDate.getFullYear() === now.getFullYear()
-  }).reduce((sum, expense) => sum + expense.amount, 0)
+    return transaction.type === "expense" && 
+           transactionDate.getMonth() === now.getMonth() && 
+           transactionDate.getFullYear() === now.getFullYear()
+  }).reduce((sum, t) => sum + t.amount, 0)
 
   if (status === "loading" || loading) {
     return (
@@ -124,15 +184,15 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-blue-100 text-sm font-medium">Total Expenses</p>
-                    <p className="text-3xl font-bold">${totalExpenses.toFixed(2)}</p>
+                    <p className="text-blue-100 text-sm font-medium">Total Balance</p>
+                    <p className="text-3xl font-bold">PKR {totalBalance.toLocaleString()}</p>
                   </div>
-                  <DollarSign className="h-10 w-10 text-blue-200" />
+                  <Wallet className="h-10 w-10 text-blue-200" />
                 </div>
               </CardContent>
             </Card>
@@ -141,10 +201,22 @@ export default function Dashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-green-100 text-sm font-medium">This Month</p>
-                    <p className="text-3xl font-bold">${monthlyExpenses.toFixed(2)}</p>
+                    <p className="text-green-100 text-sm font-medium">Total Income</p>
+                    <p className="text-3xl font-bold">PKR {totalIncome.toLocaleString()}</p>
                   </div>
-                  <TrendingUp className="h-10 w-10 text-green-200" />
+                  <ArrowUpCircle className="h-10 w-10 text-green-200" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-r from-red-500 to-red-600 text-white">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-red-100 text-sm font-medium">Total Expenses</p>
+                    <p className="text-3xl font-bold">PKR {totalExpenses.toLocaleString()}</p>
+                  </div>
+                  <ArrowDownCircle className="h-10 w-10 text-red-200" />
                 </div>
               </CardContent>
             </Card>
@@ -153,95 +225,222 @@ export default function Dashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-purple-100 text-sm font-medium">Total Records</p>
-                    <p className="text-3xl font-bold">{expenses.length}</p>
+                    <p className="text-purple-100 text-sm font-medium">Transactions</p>
+                    <p className="text-3xl font-bold">{transactions.length}</p>
                   </div>
-                  <Users className="h-10 w-10 text-purple-200" />
+                  <ArrowLeftRight className="h-10 w-10 text-purple-200" />
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Actions */}
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Recent Expenses</h2>
+          {/* Quick Actions */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
             <Button 
-              onClick={() => setShowAddExpense(true)}
-              className="bg-blue-600 hover:bg-blue-700"
+              onClick={() => router.push("/transactions/add")}
+              className="bg-blue-600 hover:bg-blue-700 h-20 text-left justify-start p-6"
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Expense
+              <Plus className="h-6 w-6 mr-3" />
+              <div>
+                <div className="font-semibold">Add Transaction</div>
+                <div className="text-sm opacity-90">Record income or expense</div>
+              </div>
+            </Button>
+            
+            <Button 
+              onClick={() => router.push("/transactions")}
+              variant="outline"
+              className="h-20 text-left justify-start p-6"
+            >
+              <List className="h-6 w-6 mr-3" />
+              <div>
+                <div className="font-semibold">View All Transactions</div>
+                <div className="text-sm text-gray-600">Browse transaction history</div>
+              </div>
+            </Button>
+            
+            <Button 
+              onClick={() => router.push("/wallets")}
+              variant="outline"
+              className="h-20 text-left justify-start p-6"
+            >
+              <Wallet className="h-6 w-6 mr-3" />
+              <div>
+                <div className="font-semibold">Manage Wallets</div>
+                <div className="text-sm text-gray-600">Create and edit wallets</div>
+              </div>
+            </Button>
+            
+            <Button 
+              onClick={() => router.push("/teams")}
+              variant="outline"
+              className="h-20 text-left justify-start p-6"
+            >
+              <Users className="h-6 w-6 mr-3" />
+              <div>
+                <div className="font-semibold">Team Expenses</div>
+                <div className="text-sm text-gray-600">Manage shared expenses</div>
+              </div>
             </Button>
           </div>
 
-          {/* Expenses List */}
+          {/* Wallets Section */}
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Your Wallets</h2>
+              <Button 
+                onClick={() => setShowCreateWallet(true)}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Wallet
+              </Button>
+            </div>
+
+            {wallets.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {wallets.map((wallet) => (
+                  <Card 
+                    key={wallet._id} 
+                    className="hover:shadow-lg transition-shadow cursor-pointer"
+                    onClick={() => setSelectedWallet(wallet)}
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div 
+                            className="w-12 h-12 rounded-full flex items-center justify-center text-xl"
+                            style={{ backgroundColor: wallet.color + "20" }}
+                          >
+                            {wallet.icon || "💰"}
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-lg">{wallet.name}</h3>
+                            <p className="text-sm text-gray-600">{wallet.description}</p>
+                          </div>
+                        </div>
+                        {wallet.isDefault && (
+                          <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                            Default
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold" style={{ color: wallet.color }}>
+                          {wallet.currency} {wallet.balance.toLocaleString()}
+                        </p>
+                        <p className="text-sm text-gray-500">Current Balance</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <Wallet className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No wallets yet</h3>
+                  <p className="text-gray-600 mb-6">Create your first wallet to start tracking expenses</p>
+                  <Button onClick={() => setShowCreateWallet(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Your First Wallet
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Recent Transactions */}
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Recent Transactions</h2>
+            <Button 
+              onClick={() => router.push("/transactions/add")}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Transaction
+            </Button>
+          </div>
+
+          {/* Transactions List */}
           <Card>
             <CardContent className="p-0">
-              {expenses.length === 0 ? (
+              {transactions.length === 0 ? (
                 <div className="text-center py-12">
-                  <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No expenses yet</h3>
-                  <p className="text-gray-700 mb-4">Get started by adding your first expense</p>
-                  <Button onClick={() => setShowAddExpense(true)}>
+                  <ArrowLeftRight className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No transactions yet</h3>
+                  <p className="text-gray-600 mb-6">Start by adding your first transaction</p>
+                  <Button onClick={() => router.push("/transactions/add")}>
                     <Plus className="h-4 w-4 mr-2" />
-                    Add Your First Expense
+                    Add Your First Transaction
                   </Button>
                 </div>
               ) : (
-                <div className="overflow-hidden">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                          Title
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                          Category
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                          Amount
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                          Date
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                          Participants
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {expenses.map((expense) => (
-                        <tr key={expense._id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div>
-                              <div className="text-sm font-medium text-gray-900">
-                                {expense.title}
-                              </div>
-                              {expense.description && (
-                                <div className="text-sm text-gray-600">
-                                  {expense.description}
-                                </div>
-                              )}
+                <div className="space-y-4 p-6">
+                  {transactions.slice(0, 5).map((transaction) => {
+                    const wallet = wallets.find(w => w._id === transaction.walletId)
+                    const category = categories.find(c => c._id === transaction.categoryId)
+                    
+                    return (
+                      <div 
+                        key={transaction._id} 
+                        className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-center gap-4 flex-1">
+                          <div 
+                            className="w-12 h-12 rounded-full flex items-center justify-center"
+                            style={{ backgroundColor: category?.color + "20" || wallet?.color + "20" }}
+                          >
+                            {transaction.type === "transfer" ? (
+                              <ArrowLeftRight className="h-6 w-6 text-blue-600" />
+                            ) : transaction.type === "income" ? (
+                              <ArrowUpCircle className="h-6 w-6 text-green-600" />
+                            ) : (
+                              <ArrowDownCircle className="h-6 w-6 text-red-600" />
+                            )}
+                          </div>
+                          
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-medium text-gray-900">{transaction.title}</h4>
+                              <span className={`px-2 py-1 rounded-full text-xs ${
+                                transaction.type === "income" ? "bg-green-100 text-green-800" :
+                                transaction.type === "expense" ? "bg-red-100 text-red-800" :
+                                "bg-blue-100 text-blue-800"
+                              }`}>
+                                {transaction.type}
+                              </span>
                             </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              {expense.category}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            ${expense.amount.toFixed(2)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {new Date(expense.date).toLocaleDateString()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {expense.participants.length} people
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                            
+                            <div className="flex items-center gap-4 text-sm text-gray-500">
+                              <span>{wallet?.icon} {wallet?.name}</span>
+                              {category && <span>• {category.name}</span>}
+                              <span>• {new Date(transaction.date).toLocaleDateString()}</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="text-right">
+                          <div className={`font-semibold text-lg ${
+                            transaction.type === "income" ? "text-green-600" : 
+                            transaction.type === "expense" ? "text-red-600" : "text-blue-600"
+                          }`}>
+                            {transaction.type === "income" ? "+" : transaction.type === "expense" ? "-" : ""}
+                            {wallet?.currency || "PKR"} {transaction.amount.toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                  
+                  <div className="text-center pt-4">
+                    <Button 
+                      variant="outline"
+                      onClick={() => router.push("/transactions")}
+                    >
+                      View All Transactions
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -249,44 +448,39 @@ export default function Dashboard() {
         </div>
       </main>
 
-      {/* Add Expense Modal */}
-      {showAddExpense && (
-        <AddExpenseModal 
-          onClose={() => setShowAddExpense(false)}
+      {/* Create Wallet Modal */}
+      {showCreateWallet && (
+        <CreateWalletModal 
+          onClose={() => setShowCreateWallet(false)}
           onSuccess={() => {
-            setShowAddExpense(false)
-            fetchExpenses()
+            setShowCreateWallet(false)
+            fetchData()
           }}
+          newWallet={newWallet}
+          setNewWallet={setNewWallet}
         />
       )}
     </div>
   )
 }
 
-// Add Expense Modal Component
-function AddExpenseModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
-  const [formData, setFormData] = useState({
-    title: "",
-    amount: "",
-    category: "",
-    description: "",
-    date: new Date().toISOString().split('T')[0],
-    participants: ["me"]
-  })
+// Create Wallet Modal Component
+function CreateWalletModal({ 
+  onClose, 
+  onSuccess, 
+  newWallet, 
+  setNewWallet 
+}: { 
+  onClose: () => void; 
+  onSuccess: () => void;
+  newWallet: any;
+  setNewWallet: (wallet: any) => void;
+}) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
-  const categories = [
-    "Food & Dining",
-    "Utilities",
-    "Rent",
-    "Transportation",
-    "Entertainment",
-    "Groceries",
-    "Shopping",
-    "Healthcare",
-    "Other"
-  ]
+  const walletIcons = ["💰", "🏦", "💳", "🏠", "💼", "🚗", "🎯", "💎", "🎁", "📱"]
+  const walletColors = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#06B6D4", "#84CC16", "#F97316"]
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -294,26 +488,27 @@ function AddExpenseModal({ onClose, onSuccess }: { onClose: () => void; onSucces
     setError("")
 
     try {
-      const response = await fetch("/api/expenses", {
+      const response = await fetch("/api/wallets", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          title: formData.title,
-          amount: parseFloat(formData.amount),
-          category: formData.category,
-          description: formData.description,
-          date: formData.date,
-          participants: formData.participants,
-        }),
+        body: JSON.stringify(newWallet),
       })
 
       if (response.ok) {
         onSuccess()
+        setNewWallet({
+          name: "",
+          currency: "PKR",
+          balance: 0,
+          description: "",
+          color: "#3B82F6",
+          icon: "💰"
+        })
       } else {
         const errorData = await response.json()
-        setError(errorData.error || "Failed to create expense")
+        setError(errorData.error || "Failed to create wallet")
       }
     } catch {
       setError("An unexpected error occurred")
@@ -326,66 +521,86 @@ function AddExpenseModal({ onClose, onSuccess }: { onClose: () => void; onSucces
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Add New Expense</CardTitle>
+          <CardTitle>Create New Wallet</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Title
+                Wallet Name
               </label>
               <Input
                 type="text"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="Enter expense title"
+                value={newWallet.name}
+                onChange={(e) => setNewWallet({ ...newWallet, name: e.target.value })}
+                placeholder="e.g., Savings, Work, Home"
                 required
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Amount
+                Currency
+              </label>
+              <Input
+                type="text"
+                value={newWallet.currency}
+                onChange={(e) => setNewWallet({ ...newWallet, currency: e.target.value })}
+                placeholder="e.g., PKR, USD, EUR"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Initial Balance
               </label>
               <Input
                 type="number"
                 step="0.01"
-                value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                value={newWallet.balance}
+                onChange={(e) => setNewWallet({ ...newWallet, balance: parseFloat(e.target.value) || 0 })}
                 placeholder="0.00"
-                required
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Category
+                Icon
               </label>
-              <select
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              >
-                <option value="">Select a category</option>
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
+              <div className="grid grid-cols-5 gap-2">
+                {walletIcons.map((icon) => (
+                  <button
+                    key={icon}
+                    type="button"
+                    onClick={() => setNewWallet({ ...newWallet, icon })}
+                    className={`p-3 text-xl border rounded-lg hover:bg-gray-50 ${
+                      newWallet.icon === icon ? "border-blue-500 bg-blue-50" : "border-gray-300"
+                    }`}
+                  >
+                    {icon}
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date
+                Color
               </label>
-              <Input
-                type="date"
-                value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                required
-              />
+              <div className="grid grid-cols-4 gap-2">
+                {walletColors.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => setNewWallet({ ...newWallet, color })}
+                    className={`w-8 h-8 rounded-full border-2 ${
+                      newWallet.color === color ? "border-gray-800" : "border-gray-300"
+                    }`}
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+              </div>
             </div>
 
             <div>
@@ -394,9 +609,9 @@ function AddExpenseModal({ onClose, onSuccess }: { onClose: () => void; onSucces
               </label>
               <Input
                 type="text"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Additional details"
+                value={newWallet.description}
+                onChange={(e) => setNewWallet({ ...newWallet, description: e.target.value })}
+                placeholder="Purpose of this wallet"
               />
             </div>
 
@@ -418,7 +633,7 @@ function AddExpenseModal({ onClose, onSuccess }: { onClose: () => void; onSucces
                 disabled={loading}
                 className="flex-1"
               >
-                {loading ? "Adding..." : "Add Expense"}
+                {loading ? "Creating..." : "Create Wallet"}
               </Button>
             </div>
           </form>
