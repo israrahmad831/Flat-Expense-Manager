@@ -1,12 +1,8 @@
-"use client""use client""use client""use client""use client"
-
-
+"use client"
 
 import { useSession } from "next-auth/react"
-
 import { useRouter } from "next/navigation"
-
-import { useEffect, useState } from "react"import { useSession } from "next-auth/react"
+import { useEffect, useState } from "react"
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 
@@ -30,7 +26,7 @@ interface Wallet {
 
   icon?: string
 
-}import { useEffect, useState } from "react"import { useSession } from "next-auth/react"import { useSession } from "next-auth/react"
+}import { useEffect, useState } from "react"import { useSession } from "next-auth/react"
 
 
 
@@ -46,7 +42,7 @@ interface Transaction {interface Wallet {
 
   categoryId: string
 
-  walletId: string  balance: numberimport { Button } from "@/components/ui/button"import { useRouter } from "next/navigation"import { useRouter } from "next/navigation"
+  walletId: string  balance: numberimport { Button } from "@/components/ui/button"import { useRouter } from "next/navigation"
 
   date: string
 
@@ -60,223 +56,779 @@ interface Category {  color?: stringimport { ArrowLeft, TrendingUp, TrendingDown
 
   name: string  icon?: string
 
-  type: "income" | "expense"
+  icon: string
 
-  icon: string}import { useEffect, useState } from "react"import { useEffect, useState } from "react"
-
-  color: string
-
-}
+}}import { useEffect, useState } from "react"import { useSession } from "next-auth/react"
 
 
 
-interface CategoryTotal {interface Transaction {interface Wallet {
+interface CategoryTotal {
 
   category: Category
 
-  total: number  _id: string
+  total: numberinterface Transaction {interface Wallet {
 
-  count: number
+  percentage: number
 
-  percentage: number  title: string  _id: stringimport { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+}  _id: string
 
-}
 
-  amount: number
 
-export default function AnalyticsPage() {
+export default function AnalyticsPage() {  title: string  _id: stringimport { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 
-  const { data: session } = useSession()  type: "income" | "expense" | "transfer"  name: string
+  const { data: session } = useSession()
 
-  const router = useRouter()
+  const router = useRouter()  amount: number
 
-  const [wallets, setWallets] = useState<Wallet[]>([])  categoryId: string
+  const [wallets, setWallets] = useState<Wallet[]>([])
+
+  const [categories, setCategories] = useState<Category[]>([])  type: "income" | "expense" | "transfer"  name: string
 
   const [transactions, setTransactions] = useState<Transaction[]>([])
 
-  const [categories, setCategories] = useState<Category[]>([])  walletId: string  balance: numberimport { Button } from "@/components/ui/button"import { Button } from "@/components/ui/button"
+  const [categoryTotals, setCategoryTotals] = useState<CategoryTotal[]>([])  categoryId: string
 
-  const [loading, setLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
 
-  const [period, setPeriod] = useState("thisMonth")  toWalletId?: string
-
-
-
-  useEffect(() => {  date: string  currency: string
-
-    if (session) {
-
-      fetchData()}
-
-    }
-
-  }, [session, period])  color?: stringimport { ArrowLeft, TrendingUp, TrendingDown, Calendar, DollarSign, Wallet, PieChart, BarChart3 } from "lucide-react"import { ArrowLeft, TrendingUp, TrendingDown, Calendar, DollarSign, Wallet, PieChart, BarChart3 } from "lucide-react"
+  const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month')  walletId: string  balance: numberimport { Button } from "@/components/ui/button"import { useRouter } from "next/navigation"
 
 
 
-  const fetchData = async () => {interface Category {
+  useEffect(() => {  date: string
 
-    setLoading(true)
+    if (!session?.user?.id) {
 
-    try {  _id: string  icon?: string
+      router.push('/auth/signin')}  currency: string
 
-      const [walletsRes, transactionsRes, categoriesRes] = await Promise.all([
-
-        fetch("/api/wallets"),  name: string
-
-        fetch("/api/transactions?limit=1000"),
-
-        fetch("/api/categories")  type: "income" | "expense"}
-
-      ])
-
-  icon: string
-
-      if (walletsRes.ok) {
-
-        const data = await walletsRes.json()  color: string
-
-        setWallets(data.wallets || [])
-
-      }}
-
-
-
-      if (transactionsRes.ok) {interface Transaction {interface Wallet {interface Wallet {
-
-        const data = await transactionsRes.json()
-
-        setTransactions(data.transactions || [])interface CategoryTotal {
-
-      }
-
-  category: Category  _id: string
-
-      if (categoriesRes.ok) {
-
-        const data = await categoriesRes.json()  total: number
-
-        setCategories(data.categories || [])
-
-      }  count: number  title: string  _id: string  _id: string
-
-    } catch (error) {
-
-      console.error("Error fetching data:", error)  percentage: number
-
-    } finally {
-
-      setLoading(false)}  amount: number
+      return
 
     }
-
-  }
-
-
-
-  // Filter transactions by periodexport default function AnalyticsPage() {  type: "income" | "expense" | "transfer"  name: string  name: string
-
-  const getFilteredTransactions = () => {
-
-    const now = new Date()  const { data: session } = useSession()
-
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-
-    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)  const router = useRouter()  categoryId: string
-
-    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0)
-
-    const startOfYear = new Date(now.getFullYear(), 0, 1)  const [wallets, setWallets] = useState<Wallet[]>([])
-
-    const startOf3MonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1)
-
-  const [transactions, setTransactions] = useState<Transaction[]>([])  walletId: string  balance: number  balance: number
-
-    return transactions.filter(transaction => {
-
-      const transactionDate = new Date(transaction.date)  const [categories, setCategories] = useState<Category[]>([])
-
-      
-
-      switch (period) {  const [loading, setLoading] = useState(true)  toWalletId?: string
-
-        case "thisMonth":
-
-          return transactionDate >= startOfMonth  const [period, setPeriod] = useState("thisMonth")
-
-        case "lastMonth":
-
-          return transactionDate >= startOfLastMonth && transactionDate <= endOfLastMonth  date: string  currency: string  currency: string
-
-        case "thisYear":
-
-          return transactionDate >= startOfYear  useEffect(() => {
-
-        case "last3Months":
-
-          return transactionDate >= startOf3MonthsAgo    if (session) {}
-
-        default:
-
-          return true      fetchData()
-
-      }
-
-    })    }  color?: string  color?: string
-
-  }
-
-  }, [session, period])
-
-  const filteredTransactions = getFilteredTransactions()
-
-  interface Category {
-
-  // Calculate totals
-
-  const totalIncome = filteredTransactions  const fetchData = async () => {
-
-    .filter(t => t.type === "income")
-
-    .reduce((sum, t) => sum + t.amount, 0)    setLoading(true)  _id: string  icon?: string  icon?: string
-
-
-
-  const totalExpenses = filteredTransactions    try {
-
-    .filter(t => t.type === "expense")
-
-    .reduce((sum, t) => sum + t.amount, 0)      const [walletsRes, transactionsRes, categoriesRes] = await Promise.all([  name: string
-
-
-
-  const netIncome = totalIncome - totalExpenses        fetch("/api/wallets"),
-
-
-
-  // Category analysis        fetch("/api/transactions?limit=1000"),  type: "income" | "expense"}}
-
-  const getCategoryTotals = (type: "income" | "expense"): CategoryTotal[] => {
-
-    const categoryTotals: { [key: string]: { total: number; count: number; category: Category } } = {}        fetch("/api/categories")
 
     
 
-    filteredTransactions      ])  icon: string
+    fetchData()interface Category {  color?: stringimport { ArrowLeft, TrendingUp, TrendingDown, Calendar, DollarSign, Wallet, PieChart, BarChart3 } from "lucide-react"
 
-      .filter(t => t.type === type)
+  }, [session, router, selectedPeriod])
 
-      .forEach(transaction => {
+  _id: string
 
-        const category = categories.find(c => c._id === transaction.categoryId)
+  const fetchData = async () => {
 
-        if (category) {      if (walletsRes.ok) {  color: string
+    try {  name: string  icon?: string
 
-          if (!categoryTotals[category._id]) {
+      setIsLoading(true)
 
-            categoryTotals[category._id] = { total: 0, count: 0, category }        const data = await walletsRes.json()
+        icon: string
 
-          }
+      // Fetch wallets, categories, and transactions
+
+      const [walletsRes, categoriesRes, transactionsRes] = await Promise.all([}}import { useEffect, useState } from "react"import { useSession } from "next-auth/react"import { useSession } from "next-auth/react"
+
+        fetch('/api/wallets'),
+
+        fetch('/api/categories'),
+
+        fetch(`/api/transactions?period=${selectedPeriod}`)
+
+      ])interface CategoryTotal {
+
+      
+
+      const walletsData = await walletsRes.json()  category: Category
+
+      const categoriesData = await categoriesRes.json()
+
+      const transactionsData = await transactionsRes.json()  total: numberinterface Transaction {interface Wallet {
+
+      
+
+      if (walletsRes.ok) setWallets(walletsData.wallets || [])  percentage: number
+
+      if (categoriesRes.ok) setCategories(categoriesData.categories || [])
+
+      if (transactionsRes.ok) {}  _id: string
+
+        setTransactions(transactionsData.transactions || [])
+
+        calculateCategoryTotals(transactionsData.transactions || [], categoriesData.categories || [])
+
+      }
+
+    } catch (error) {export default function AnalyticsPage() {  title: string  _id: stringimport { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+
+      console.error('Error fetching data:', error)
+
+    } finally {  const { data: session } = useSession()
+
+      setIsLoading(false)
+
+    }  const router = useRouter()  amount: number
+
+  }
+
+  const [wallets, setWallets] = useState<Wallet[]>([])
+
+  const calculateCategoryTotals = (transactions: Transaction[], categories: Category[]) => {
+
+    const categoryMap = new Map<string, number>()  const [categories, setCategories] = useState<Category[]>([])  type: "income" | "expense" | "transfer"  name: string
+
+    let totalExpenses = 0
+
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+
+    transactions.forEach(transaction => {
+
+      if (transaction.type === 'expense') {  const [categoryTotals, setCategoryTotals] = useState<CategoryTotal[]>([])  categoryId: string
+
+        totalExpenses += transaction.amount
+
+        const current = categoryMap.get(transaction.categoryId) || 0  const [isLoading, setIsLoading] = useState(true)
+
+        categoryMap.set(transaction.categoryId, current + transaction.amount)
+
+      }  const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month')  walletId: string  balance: numberimport { Button } from "@/components/ui/button"import { useRouter } from "next/navigation"import { useRouter } from "next/navigation"
+
+    })
+
+
+
+    const totals: CategoryTotal[] = []
+
+    categoryMap.forEach((total, categoryId) => {  useEffect(() => {  date: string
+
+      const category = categories.find(c => c._id === categoryId)
+
+      if (category) {    if (!session?.user?.id) {
+
+        totals.push({
+
+          category,      router.push('/auth/signin')}  currency: string
+
+          total,
+
+          percentage: totalExpenses > 0 ? (total / totalExpenses) * 100 : 0      return
+
+        })
+
+      }    }
+
+    })
+
+    
+
+    totals.sort((a, b) => b.total - a.total)
+
+    setCategoryTotals(totals)    fetchData()interface Category {  color?: stringimport { ArrowLeft, TrendingUp, TrendingDown, Calendar, DollarSign, Wallet, PieChart, BarChart3 } from "lucide-react"
+
+  }
+
+  }, [session, router, selectedPeriod])
+
+  const totalBalance = wallets.reduce((sum, wallet) => sum + wallet.balance, 0)
+
+  const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0)  _id: string
+
+  const totalExpenses = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0)
+
+  const netFlow = totalIncome - totalExpenses  const fetchData = async () => {
+
+
+
+  if (!session) return null    try {  name: string  icon?: string
+
+
+
+  return (      setIsLoading(true)
+
+    <div className="min-h-screen bg-gray-50 p-4">
+
+      <div className="max-w-6xl mx-auto">        type: "income" | "expense"
+
+        {/* Header */}
+
+        <div className="flex items-center justify-between mb-6">      // Fetch wallets, categories, and transactions
+
+          <div className="flex items-center space-x-4">
+
+            <Button      const [walletsRes, categoriesRes, transactionsRes] = await Promise.all([  icon: string}import { useEffect, useState } from "react"import { useEffect, useState } from "react"
+
+              variant="outline"
+
+              onClick={() => router.back()}        fetch('/api/wallets'),
+
+              className="flex items-center space-x-2"
+
+            >        fetch('/api/categories'),  color: string
+
+              <ArrowLeft className="w-4 h-4" />
+
+              <span>Back</span>        fetch(`/api/transactions?period=${selectedPeriod}`)
+
+            </Button>
+
+            <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>      ])}
+
+          </div>
+
+                
+
+          <div className="flex space-x-2">
+
+            {(['week', 'month', 'year'] as const).map(period => (      const walletsData = await walletsRes.json()
+
+              <Button
+
+                key={period}      const categoriesData = await categoriesRes.json()
+
+                variant={selectedPeriod === period ? 'default' : 'outline'}
+
+                onClick={() => setSelectedPeriod(period)}      const transactionsData = await transactionsRes.json()interface CategoryTotal {interface Transaction {interface Wallet {
+
+                className="capitalize"
+
+              >      
+
+                {period}
+
+              </Button>      if (walletsRes.ok) setWallets(walletsData.wallets || [])  category: Category
+
+            ))}
+
+          </div>      if (categoriesRes.ok) setCategories(categoriesData.categories || [])
+
+        </div>
+
+      if (transactionsRes.ok) {  total: number  _id: string
+
+        {isLoading ? (
+
+          <div className="flex items-center justify-center py-12">        setTransactions(transactionsData.transactions || [])
+
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+
+          </div>        calculateCategoryTotals(transactionsData.transactions || [], categoriesData.categories || [])  count: number
+
+        ) : (
+
+          <div className="space-y-6">      }
+
+            {/* Summary Cards */}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">    } catch (error) {  percentage: number  title: string  _id: stringimport { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+
+              <Card>
+
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">      console.error('Error fetching data:', error)
+
+                  <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
+
+                  <Wallet className="h-4 w-4 text-muted-foreground" />    } finally {}
+
+                </CardHeader>
+
+                <CardContent>      setIsLoading(false)
+
+                  <div className="text-2xl font-bold">${totalBalance.toFixed(2)}</div>
+
+                </CardContent>    }  amount: number
+
+              </Card>
+
+  }
+
+              <Card>
+
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">export default function AnalyticsPage() {
+
+                  <CardTitle className="text-sm font-medium">Total Income</CardTitle>
+
+                  <TrendingUp className="h-4 w-4 text-green-600" />  const calculateCategoryTotals = (transactions: Transaction[], categories: Category[]) => {
+
+                </CardHeader>
+
+                <CardContent>    const categoryMap = new Map<string, number>()  const { data: session } = useSession()  type: "income" | "expense" | "transfer"  name: string
+
+                  <div className="text-2xl font-bold text-green-600">${totalIncome.toFixed(2)}</div>
+
+                </CardContent>    let totalExpenses = 0
+
+              </Card>
+
+  const router = useRouter()
+
+              <Card>
+
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">    transactions.forEach(transaction => {
+
+                  <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
+
+                  <TrendingDown className="h-4 w-4 text-red-600" />      if (transaction.type === 'expense') {  const [wallets, setWallets] = useState<Wallet[]>([])  categoryId: string
+
+                </CardHeader>
+
+                <CardContent>        totalExpenses += transaction.amount
+
+                  <div className="text-2xl font-bold text-red-600">${totalExpenses.toFixed(2)}</div>
+
+                </CardContent>        const current = categoryMap.get(transaction.categoryId) || 0  const [transactions, setTransactions] = useState<Transaction[]>([])
+
+              </Card>
+
+        categoryMap.set(transaction.categoryId, current + transaction.amount)
+
+              <Card>
+
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">      }  const [categories, setCategories] = useState<Category[]>([])  walletId: string  balance: numberimport { Button } from "@/components/ui/button"import { Button } from "@/components/ui/button"
+
+                  <CardTitle className="text-sm font-medium">Net Flow</CardTitle>
+
+                  <DollarSign className={`h-4 w-4 ${netFlow >= 0 ? 'text-green-600' : 'text-red-600'}`} />    })
+
+                </CardHeader>
+
+                <CardContent>  const [loading, setLoading] = useState(true)
+
+                  <div className={`text-2xl font-bold ${netFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+
+                    ${netFlow.toFixed(2)}    const totals: CategoryTotal[] = []
+
+                  </div>
+
+                </CardContent>    categoryMap.forEach((total, categoryId) => {  const [period, setPeriod] = useState("thisMonth")  toWalletId?: string
+
+              </Card>
+
+            </div>      const category = categories.find(c => c._id === categoryId)
+
+
+
+            {/* Category Breakdown */}      if (category) {
+
+            <Card>
+
+              <CardHeader>        totals.push({
+
+                <CardTitle className="flex items-center space-x-2">
+
+                  <PieChart className="w-5 h-5" />          category,  useEffect(() => {  date: string  currency: string
+
+                  <span>Expense Breakdown by Category</span>
+
+                </CardTitle>          total,
+
+              </CardHeader>
+
+              <CardContent>          percentage: totalExpenses > 0 ? (total / totalExpenses) * 100 : 0    if (session) {
+
+                {categoryTotals.length > 0 ? (
+
+                  <div className="space-y-4">        })
+
+                    {categoryTotals.map((item) => (
+
+                      <div key={item.category._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">      }      fetchData()}
+
+                        <div className="flex items-center space-x-3">
+
+                          <span className="text-2xl">{item.category.icon}</span>    })
+
+                          <div>
+
+                            <p className="font-medium">{item.category.name}</p>    }
+
+                            <p className="text-sm text-gray-500">{item.percentage.toFixed(1)}% of total</p>
+
+                          </div>    totals.sort((a, b) => b.total - a.total)
+
+                        </div>
+
+                        <div className="text-right">    setCategoryTotals(totals)  }, [session, period])  color?: stringimport { ArrowLeft, TrendingUp, TrendingDown, Calendar, DollarSign, Wallet, PieChart, BarChart3 } from "lucide-react"import { ArrowLeft, TrendingUp, TrendingDown, Calendar, DollarSign, Wallet, PieChart, BarChart3 } from "lucide-react"
+
+                          <p className="font-bold">${item.total.toFixed(2)}</p>
+
+                          <div className="w-24 h-2 bg-gray-200 rounded-full mt-1">  }
+
+                            <div 
+
+                              className="h-full bg-blue-600 rounded-full" 
+
+                              style={{ width: `${item.percentage}%` }}
+
+                            />  const totalBalance = wallets.reduce((sum, wallet) => sum + wallet.balance, 0)
+
+                          </div>
+
+                        </div>  const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0)  const fetchData = async () => {interface Category {
+
+                      </div>
+
+                    ))}  const totalExpenses = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0)
+
+                  </div>
+
+                ) : (  const netFlow = totalIncome - totalExpenses    setLoading(true)
+
+                  <p className="text-center text-gray-500 py-8">No expense data available for this period</p>
+
+                )}
+
+              </CardContent>
+
+            </Card>  if (!session) return null    try {  _id: string  icon?: string
+
+
+
+            {/* Wallet Overview */}
+
+            <Card>
+
+              <CardHeader>  return (      const [walletsRes, transactionsRes, categoriesRes] = await Promise.all([
+
+                <CardTitle className="flex items-center space-x-2">
+
+                  <BarChart3 className="w-5 h-5" />    <div className="min-h-screen bg-gray-50 p-4">
+
+                  <span>Wallet Overview</span>
+
+                </CardTitle>      <div className="max-w-6xl mx-auto">        fetch("/api/wallets"),  name: string
+
+              </CardHeader>
+
+              <CardContent>        {/* Header */}
+
+                {wallets.length > 0 ? (
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">        <div className="flex items-center justify-between mb-6">        fetch("/api/transactions?limit=1000"),
+
+                    {wallets.map((wallet) => (
+
+                      <div key={wallet._id} className="p-4 border rounded-lg">          <div className="flex items-center space-x-4">
+
+                        <div className="flex items-center space-x-3 mb-2">
+
+                          <span className="text-2xl">{wallet.icon || '💳'}</span>            <Button        fetch("/api/categories")  type: "income" | "expense"}
+
+                          <div>
+
+                            <p className="font-medium">{wallet.name}</p>              variant="outline"
+
+                            <p className="text-sm text-gray-500">{wallet.currency}</p>
+
+                          </div>              onClick={() => router.back()}      ])
+
+                        </div>
+
+                        <p className="text-xl font-bold" style={{ color: wallet.color }}>              className="flex items-center space-x-2"
+
+                          {wallet.currency} {wallet.balance.toFixed(2)}
+
+                        </p>            >  icon: string
+
+                      </div>
+
+                    ))}              <ArrowLeft className="w-4 h-4" />
+
+                  </div>
+
+                ) : (              <span>Back</span>      if (walletsRes.ok) {
+
+                  <p className="text-center text-gray-500 py-8">No wallets found</p>
+
+                )}            </Button>
+
+              </CardContent>
+
+            </Card>            <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>        const data = await walletsRes.json()  color: string
+
+          </div>
+
+        )}          </div>
+
+      </div>
+
+    </div>                  setWallets(data.wallets || [])
+
+  )
+
+}          <div className="flex space-x-2">
+
+            {(['week', 'month', 'year'] as const).map(period => (      }}
+
+              <Button
+
+                key={period}
+
+                variant={selectedPeriod === period ? 'default' : 'outline'}
+
+                onClick={() => setSelectedPeriod(period)}      if (transactionsRes.ok) {interface Transaction {interface Wallet {interface Wallet {
+
+                className="capitalize"
+
+              >        const data = await transactionsRes.json()
+
+                {period}
+
+              </Button>        setTransactions(data.transactions || [])interface CategoryTotal {
+
+            ))}
+
+          </div>      }
+
+        </div>
+
+  category: Category  _id: string
+
+        {isLoading ? (
+
+          <div className="flex items-center justify-center py-12">      if (categoriesRes.ok) {
+
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+
+          </div>        const data = await categoriesRes.json()  total: number
+
+        ) : (
+
+          <div className="space-y-6">        setCategories(data.categories || [])
+
+            {/* Summary Cards */}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">      }  count: number  title: string  _id: string  _id: string
+
+              <Card>
+
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">    } catch (error) {
+
+                  <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
+
+                  <Wallet className="h-4 w-4 text-muted-foreground" />      console.error("Error fetching data:", error)  percentage: number
+
+                </CardHeader>
+
+                <CardContent>    } finally {
+
+                  <div className="text-2xl font-bold">${totalBalance.toFixed(2)}</div>
+
+                </CardContent>      setLoading(false)}  amount: number
+
+              </Card>
+
+    }
+
+              <Card>
+
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">  }
+
+                  <CardTitle className="text-sm font-medium">Total Income</CardTitle>
+
+                  <TrendingUp className="h-4 w-4 text-green-600" />
+
+                </CardHeader>
+
+                <CardContent>  // Filter transactions by periodexport default function AnalyticsPage() {  type: "income" | "expense" | "transfer"  name: string  name: string
+
+                  <div className="text-2xl font-bold text-green-600">${totalIncome.toFixed(2)}</div>
+
+                </CardContent>  const getFilteredTransactions = () => {
+
+              </Card>
+
+    const now = new Date()  const { data: session } = useSession()
+
+              <Card>
+
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+
+                  <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
+
+                  <TrendingDown className="h-4 w-4 text-red-600" />    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)  const router = useRouter()  categoryId: string
+
+                </CardHeader>
+
+                <CardContent>    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0)
+
+                  <div className="text-2xl font-bold text-red-600">${totalExpenses.toFixed(2)}</div>
+
+                </CardContent>    const startOfYear = new Date(now.getFullYear(), 0, 1)  const [wallets, setWallets] = useState<Wallet[]>([])
+
+              </Card>
+
+    const startOf3MonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1)
+
+              <Card>
+
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">  const [transactions, setTransactions] = useState<Transaction[]>([])  walletId: string  balance: number  balance: number
+
+                  <CardTitle className="text-sm font-medium">Net Flow</CardTitle>
+
+                  <DollarSign className={`h-4 w-4 ${netFlow >= 0 ? 'text-green-600' : 'text-red-600'}`} />    return transactions.filter(transaction => {
+
+                </CardHeader>
+
+                <CardContent>      const transactionDate = new Date(transaction.date)  const [categories, setCategories] = useState<Category[]>([])
+
+                  <div className={`text-2xl font-bold ${netFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+
+                    ${netFlow.toFixed(2)}      
+
+                  </div>
+
+                </CardContent>      switch (period) {  const [loading, setLoading] = useState(true)  toWalletId?: string
+
+              </Card>
+
+            </div>        case "thisMonth":
+
+
+
+            {/* Category Breakdown */}          return transactionDate >= startOfMonth  const [period, setPeriod] = useState("thisMonth")
+
+            <Card>
+
+              <CardHeader>        case "lastMonth":
+
+                <CardTitle className="flex items-center space-x-2">
+
+                  <PieChart className="w-5 h-5" />          return transactionDate >= startOfLastMonth && transactionDate <= endOfLastMonth  date: string  currency: string  currency: string
+
+                  <span>Expense Breakdown by Category</span>
+
+                </CardTitle>        case "thisYear":
+
+              </CardHeader>
+
+              <CardContent>          return transactionDate >= startOfYear  useEffect(() => {
+
+                {categoryTotals.length > 0 ? (
+
+                  <div className="space-y-4">        case "last3Months":
+
+                    {categoryTotals.map((item) => (
+
+                      <div key={item.category._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">          return transactionDate >= startOf3MonthsAgo    if (session) {}
+
+                        <div className="flex items-center space-x-3">
+
+                          <span className="text-2xl">{item.category.icon}</span>        default:
+
+                          <div>
+
+                            <p className="font-medium">{item.category.name}</p>          return true      fetchData()
+
+                            <p className="text-sm text-gray-500">{item.percentage.toFixed(1)}% of total</p>
+
+                          </div>      }
+
+                        </div>
+
+                        <div className="text-right">    })    }  color?: string  color?: string
+
+                          <p className="font-bold">${item.total.toFixed(2)}</p>
+
+                          <div className="w-24 h-2 bg-gray-200 rounded-full mt-1">  }
+
+                            <div 
+
+                              className="h-full bg-blue-600 rounded-full"   }, [session, period])
+
+                              style={{ width: `${item.percentage}%` }}
+
+                            />  const filteredTransactions = getFilteredTransactions()
+
+                          </div>
+
+                        </div>  interface Category {
+
+                      </div>
+
+                    ))}  // Calculate totals
+
+                  </div>
+
+                ) : (  const totalIncome = filteredTransactions  const fetchData = async () => {
+
+                  <p className="text-center text-gray-500 py-8">No expense data available for this period</p>
+
+                )}    .filter(t => t.type === "income")
+
+              </CardContent>
+
+            </Card>    .reduce((sum, t) => sum + t.amount, 0)    setLoading(true)  _id: string  icon?: string  icon?: string
+
+
+
+            {/* Wallet Overview */}
+
+            <Card>
+
+              <CardHeader>  const totalExpenses = filteredTransactions    try {
+
+                <CardTitle className="flex items-center space-x-2">
+
+                  <BarChart3 className="w-5 h-5" />    .filter(t => t.type === "expense")
+
+                  <span>Wallet Overview</span>
+
+                </CardTitle>    .reduce((sum, t) => sum + t.amount, 0)      const [walletsRes, transactionsRes, categoriesRes] = await Promise.all([  name: string
+
+              </CardHeader>
+
+              <CardContent>
+
+                {wallets.length > 0 ? (
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">  const netIncome = totalIncome - totalExpenses        fetch("/api/wallets"),
+
+                    {wallets.map((wallet) => (
+
+                      <div key={wallet._id} className="p-4 border rounded-lg">
+
+                        <div className="flex items-center space-x-3 mb-2">
+
+                          <span className="text-2xl">{wallet.icon || '💳'}</span>  // Category analysis        fetch("/api/transactions?limit=1000"),  type: "income" | "expense"}}
+
+                          <div>
+
+                            <p className="font-medium">{wallet.name}</p>  const getCategoryTotals = (type: "income" | "expense"): CategoryTotal[] => {
+
+                            <p className="text-sm text-gray-500">{wallet.currency}</p>
+
+                          </div>    const categoryTotals: { [key: string]: { total: number; count: number; category: Category } } = {}        fetch("/api/categories")
+
+                        </div>
+
+                        <p className="text-xl font-bold" style={{ color: wallet.color }}>    
+
+                          {wallet.currency} {wallet.balance.toFixed(2)}
+
+                        </p>    filteredTransactions      ])  icon: string
+
+                      </div>
+
+                    ))}      .filter(t => t.type === type)
+
+                  </div>
+
+                ) : (      .forEach(transaction => {
+
+                  <p className="text-center text-gray-500 py-8">No wallets found</p>
+
+                )}        const category = categories.find(c => c._id === transaction.categoryId)
+
+              </CardContent>
+
+            </Card>        if (category) {      if (walletsRes.ok) {  color: string
+
+          </div>
+
+        )}          if (!categoryTotals[category._id]) {
+
+      </div>
+
+    </div>            categoryTotals[category._id] = { total: 0, count: 0, category }        const data = await walletsRes.json()
+
+  )
+
+}          }
 
           categoryTotals[category._id].total += transaction.amount        setWallets(data.wallets || [])}
 

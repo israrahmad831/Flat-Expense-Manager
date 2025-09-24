@@ -6,7 +6,7 @@ import { useEffect, useState } from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ArrowUpCircle, ArrowDownCircle, CreditCard, Plus, Wallet, ArrowLeftRight, Users, Settings, DollarSign, User, TrendingUp, LogOut, List } from "lucide-react"
+import { ArrowUpCircle, ArrowDownCircle, Plus, Wallet, ArrowLeftRight, Users, Settings, DollarSign, User, TrendingUp, LogOut, List, Target, Bell, FileText } from "lucide-react"
 import { signOut } from "next-auth/react"
 
 interface Wallet {
@@ -280,6 +280,42 @@ export default function Dashboard() {
               <div>
                 <div className="font-semibold">Team Expenses</div>
                 <div className="text-sm text-gray-600">Manage shared expenses</div>
+              </div>
+            </Button>
+            
+            <Button 
+              onClick={() => router.push("/budgets")}
+              variant="outline"
+              className="h-20 text-left justify-start p-6"
+            >
+              <Target className="h-6 w-6 mr-3" />
+              <div>
+                <div className="font-semibold">Budget Tracking</div>
+                <div className="text-sm text-gray-600">Set and monitor budgets</div>
+              </div>
+            </Button>
+            
+            <Button 
+              onClick={() => router.push("/notifications")}
+              variant="outline"
+              className="h-20 text-left justify-start p-6"
+            >
+              <Bell className="h-6 w-6 mr-3" />
+              <div>
+                <div className="font-semibold">Notifications</div>
+                <div className="text-sm text-gray-600">View alerts & updates</div>
+              </div>
+            </Button>
+            
+            <Button 
+              onClick={() => router.push("/reports")}
+              variant="outline"
+              className="h-20 text-left justify-start p-6"
+            >
+              <FileText className="h-6 w-6 mr-3" />
+              <div>
+                <div className="font-semibold">Reports & Export</div>
+                <div className="text-sm text-gray-600">Generate reports & export data</div>
               </div>
             </Button>
           </div>
