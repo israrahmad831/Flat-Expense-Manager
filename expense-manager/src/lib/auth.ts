@@ -2,11 +2,8 @@ import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import GoogleProvider from "next-auth/providers/google"
 import { MongoDBAdapter } from "@next-auth/mongodb-adapter"
-import { MongoClient } from "mongodb"
 import bcrypt from "bcryptjs"
-
-const client = new MongoClient(process.env.MONGODB_URI!)
-const clientPromise = client.connect()
+import clientPromise from "@/lib/mongodb"
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -36,6 +33,11 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
+        // If user exists but no password (Google only), reject login
+        if (!user.password) {
+          throw new Error("This account was created with Google. Please sign in with Google.")
+        }
+
         const isPasswordValid = await bcrypt.compare(
           credentials.password,
           user.password
@@ -49,6 +51,7 @@ export const authOptions: NextAuthOptions = {
           id: user._id.toString(),
           email: user.email,
           name: user.name,
+          image: user.image
         }
       }
     })
@@ -63,38 +66,44 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, account, profile }: { user: any; account: any; profile: any }) {
       if (account?.provider === "google") {
+        console.log("Google OAuth signin attempt for:", user.email)
         const client = await clientPromise
         const users = client.db().collection("users")
         
-        // Check if user already exists
+        // Check if user already exists by email
         const existingUser = await users.findOne({ email: user.email })
+        console.log("Existing user found:", existingUser ? "Yes" : "No")
         
         if (existingUser) {
-          // If user has password (signed up with email), link the Google account
-          if (existingUser.password) {
-            await users.updateOne(
-              { email: user.email },
-              { 
-                $set: { 
-                  googleId: profile?.sub,
-                  image: user.image,
-                  updatedAt: new Date()
-                }
+          console.log("Merging Google account with existing user:", existingUser._id)
+          // Update existing user with Google info (merge accounts)
+          await users.updateOne(
+            { email: user.email },
+            { 
+              $set: { 
+                googleId: profile?.sub,
+                image: user.image || existingUser.image,
+                name: user.name || existingUser.name,
+                updatedAt: new Date()
               }
-            )
-            return true // Allow signin - accounts are now linked
-          }
-          // User already exists via Google, just sign in
+            }
+          )
+          // Set user id for JWT
+          user.id = existingUser._id.toString()
           return true
         } else {
-          // New Google user - create account
-          await users.insertOne({
+          console.log("Creating new Google user for:", user.email)
+          // Create new user with Google
+          const newUser = await users.insertOne({
             name: user.name,
             email: user.email,
             image: user.image,
             googleId: profile?.sub,
             createdAt: new Date(),
+            updatedAt: new Date()
           })
+          user.id = newUser.insertedId.toString()
+          console.log("New user created with ID:", user.id)
           return true
         }
       }

@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
+import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
-import { MongoClient } from "mongodb"
 import { z } from "zod"
-
-const client = new MongoClient(process.env.MONGODB_URI!)
+import clientPromise from "@/lib/mongodb"
 
 const expenseSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -18,12 +16,12 @@ const expenseSchema = z.object({
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions) as any
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    await client.connect()
+    const client = await clientPromise
     const db = client.db()
     const expenses = db.collection("expenses")
 
@@ -41,14 +39,12 @@ export async function GET() {
   } catch (error) {
     console.error("Get expenses error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
-  } finally {
-    await client.close()
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions) as any
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -56,7 +52,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const expenseData = expenseSchema.parse(body)
 
-    await client.connect()
+    const client = await clientPromise
     const db = client.db()
     const expenses = db.collection("expenses")
 
@@ -83,7 +79,5 @@ export async function POST(request: NextRequest) {
 
     console.error("Create expense error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
-  } finally {
-    await client.close()
   }
 }

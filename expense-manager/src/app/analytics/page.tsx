@@ -172,7 +172,7 @@ export default function AnalyticsPage() {
                 <div className="flex items-center">
                   <TrendingUp className="h-8 w-8 text-blue-500" />
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">Total Spent</p>
+                    <p className="text-sm font-medium text-gray-600">Total Spent</p>
                     <p className="text-2xl font-bold text-gray-900">${totalAmount.toFixed(2)}</p>
                   </div>
                 </div>
@@ -184,7 +184,7 @@ export default function AnalyticsPage() {
                 <div className="flex items-center">
                   <PieChart className="h-8 w-8 text-green-500" />
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">Transactions</p>
+                    <p className="text-sm font-medium text-gray-600">Transactions</p>
                     <p className="text-2xl font-bold text-gray-900">{filteredExpenses.length}</p>
                   </div>
                 </div>
@@ -196,7 +196,7 @@ export default function AnalyticsPage() {
                 <div className="flex items-center">
                   <Calendar className="h-8 w-8 text-purple-500" />
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">Avg per Day</p>
+                    <p className="text-sm font-medium text-gray-600">Avg per Day</p>
                     <p className="text-2xl font-bold text-gray-900">
                       ${filteredExpenses.length > 0 ? (totalAmount / Math.max(filteredExpenses.length, 1)).toFixed(2) : '0.00'}
                     </p>
@@ -210,7 +210,7 @@ export default function AnalyticsPage() {
                 <div className="flex items-center">
                   <Filter className="h-8 w-8 text-orange-500" />
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">Categories</p>
+                    <p className="text-sm font-medium text-gray-600">Categories</p>
                     <p className="text-2xl font-bold text-gray-900">{categoryTotals.length}</p>
                   </div>
                 </div>
@@ -226,7 +226,7 @@ export default function AnalyticsPage() {
               </CardHeader>
               <CardContent>
                 {categoryTotals.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-gray-600">
                     No expenses in selected period
                   </div>
                 ) : (
@@ -241,13 +241,13 @@ export default function AnalyticsPage() {
                             <span className="text-sm font-bold text-gray-900">
                               ${category.total.toFixed(2)}
                             </span>
-                            <span className="text-xs text-gray-500 ml-2">
+                            <span className="text-xs text-gray-600 ml-2">
                               ({category.count} transactions)
                             </span>
                           </div>
                         </div>
                         <Progress value={category.percentage} max={100} />
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-gray-600">
                           {category.percentage.toFixed(1)}% of total spending
                         </div>
                       </div>
@@ -274,7 +274,7 @@ export default function AnalyticsPage() {
                           <span className="text-sm font-bold text-gray-900">
                             ${month.amount.toFixed(2)}
                           </span>
-                          <span className="text-xs text-gray-500 ml-2">
+                          <span className="text-xs text-gray-600 ml-2">
                             ({month.count} transactions)
                           </span>
                         </div>
@@ -297,7 +297,7 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               {filteredExpenses.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-gray-600">
                   No recent activity in selected period
                 </div>
               ) : (
@@ -306,7 +306,7 @@ export default function AnalyticsPage() {
                     <div key={expense._id} className="flex items-center justify-between py-2 border-b border-gray-100">
                       <div>
                         <div className="font-medium text-gray-900">{expense.title}</div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-gray-600">
                           {expense.category} • {new Date(expense.date).toLocaleDateString()}
                         </div>
                       </div>

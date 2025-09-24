@@ -77,83 +77,150 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <Card>
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center">
-              Sign in to your account
-            </CardTitle>
-            <p className="text-sm text-muted-foreground text-center">
-              Enter your email and password to access your account
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium">
-                  Email
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <div className="flex min-h-screen">
+        {/* Left side - Branding */}
+        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 to-purple-700 relative overflow-hidden">
+          <div className="absolute inset-0 bg-black/20"></div>
+          <div className="relative z-10 flex flex-col justify-center px-12 text-white">
+            <div className="mb-8">
+              <h1 className="text-4xl font-bold mb-4">Welcome Back!</h1>
+              <p className="text-xl opacity-90 leading-relaxed">
+                Sign in to continue managing your expenses with ease and precision.
+              </p>
+            </div>
+            <div className="space-y-6">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-semibold">Secure & Private</h3>
+                  <p className="text-sm opacity-80">Your data is protected with enterprise-grade security</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-semibold">Easy to Use</h3>
+                  <p className="text-sm opacity-80">Intuitive interface designed for everyone</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* Decorative elements */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24"></div>
+        </div>
+
+        {/* Right side - Form */}
+        <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+          <div className="w-full max-w-md space-y-8">
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-gray-900">Sign In</h2>
+              <p className="mt-2 text-gray-600">Welcome back to Expense Manager</p>
+            </div>
+            
+            <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader className="space-y-1 pb-4">
+                <CardTitle className="text-xl text-center text-gray-800">
+                  Enter your credentials
+                </CardTitle>
+              </CardHeader>
+          <CardContent className="space-y-6 p-8">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <div className="space-y-3">
+                <label htmlFor="email" className="text-sm font-semibold text-gray-700">
+                  Email Address
                 </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <div className="relative group">
+                  <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                   <Input
                     id="email"
                     type="email"
-                    placeholder="Enter your email"
-                    className="pl-10"
+                    placeholder="Enter your email address"
+                    className="pl-12 h-12 border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-xl transition-all duration-200 text-gray-700 placeholder:text-gray-400"
                     {...register("email")}
                   />
                 </div>
                 {errors.email && (
-                  <p className="text-sm text-red-600">{errors.email.message}</p>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 rounded-full bg-red-100 flex items-center justify-center">
+                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    </div>
+                    <p className="text-sm text-red-600 font-medium">{errors.email.message}</p>
+                  </div>
                 )}
               </div>
 
-              <div className="space-y-2">
-                <label htmlFor="password" className="text-sm font-medium">
+              <div className="space-y-3">
+                <label htmlFor="password" className="text-sm font-semibold text-gray-700">
                   Password
                 </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
-                    className="pl-10 pr-10"
+                    className="pl-12 pr-12 h-12 border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-xl transition-all duration-200 text-gray-700 placeholder:text-gray-400"
                     {...register("password")}
                   />
                   <button
                     type="button"
-                    className="absolute right-3 top-3 h-4 w-4 text-gray-400 hover:text-gray-600"
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 hover:text-blue-500 transition-colors"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? <EyeOff /> : <Eye />}
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="text-sm text-red-600">{errors.password.message}</p>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 rounded-full bg-red-100 flex items-center justify-center">
+                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    </div>
+                    <p className="text-sm text-red-600 font-medium">{errors.password.message}</p>
+                  </div>
                 )}
               </div>
 
               {error && (
-                <div className="text-sm text-red-600 text-center">{error}</div>
+                <div className="flex items-center justify-center space-x-2 p-4 bg-red-50 border border-red-200 rounded-xl">
+                  <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center">
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  </div>
+                  <div className="text-sm text-red-700 font-medium">{error}</div>
+                </div>
               )}
 
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-60 disabled:transform-none"
                 disabled={isLoading}
               >
-                {isLoading ? "Signing in..." : "Sign In"}
+                {isLoading ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <span>Signing in...</span>
+                  </div>
+                ) : (
+                  "Sign In"
+                )}
               </Button>
             </form>
 
-            <div className="relative">
+            <div className="relative my-8">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
+                <span className="w-full border-t border-gray-200" />
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-white px-4 text-gray-700 font-semibold">
                   Or continue with
                 </span>
               </div>
@@ -162,7 +229,7 @@ export default function SignInPage() {
             <Button
               variant="outline"
               type="button"
-              className="w-full transition-all hover:scale-105"
+              className="w-full h-12 border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 rounded-xl transition-all duration-200 transform hover:scale-[1.02] font-semibold text-gray-700"
               onClick={handleGoogleSignIn}
               disabled={isLoading}
             >
@@ -191,17 +258,19 @@ export default function SignInPage() {
               {isLoading ? "Signing in..." : "Continue with Google"}
             </Button>
 
-            <p className="text-center text-sm text-muted-foreground">
+            <p className="text-center text-sm text-gray-600">
               Don&apos;t have an account?{" "}
               <Link
                 href="/auth/signup"
-                className="underline underline-offset-4 hover:text-primary"
+                className="text-blue-600 hover:text-blue-700 underline underline-offset-4 font-semibold transition-colors"
               >
                 Sign up
               </Link>
             </p>
           </CardContent>
         </Card>
+          </div>
+        </div>
       </div>
     </div>
   )

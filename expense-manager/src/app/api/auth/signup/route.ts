@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import { MongoClient } from "mongodb"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
-
-const client = new MongoClient(process.env.MONGODB_URI!)
+import clientPromise from "@/lib/mongodb"
 
 const signupSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -16,25 +14,24 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { name, email, password } = signupSchema.parse(body)
 
-    await client.connect()
+    const client = await clientPromise
     const db = client.db()
     const users = db.collection("users")
 
     // Check if user already exists
+    console.log("Email signup attempt for:", email)
     const existingUser = await users.findOne({ email })
+    console.log("Existing user found during signup:", existingUser ? "Yes" : "No")
+    
     if (existingUser) {
-      // Check if user signed up with Google
-      if (existingUser.googleId && !existingUser.password) {
-        return NextResponse.json(
-          { 
-            error: "An account with this email already exists via Google. Please sign in with Google instead.", 
-            provider: "google" 
-          },
-          { status: 400 }
-        )
-      }
-      // Check if user signed up with email/password
+      console.log("Existing user details:", { 
+        hasPassword: !!existingUser.password, 
+        hasGoogleId: !!existingUser.googleId 
+      })
+      
+      // If user has both Google and password, they already have a full account
       if (existingUser.password) {
+        console.log("User already has password, rejecting signup")
         return NextResponse.json(
           { 
             error: "An account with this email already exists. Please sign in with your email and password.", 
@@ -43,19 +40,47 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         )
       }
+      
+      // If user only has Google account, add password to existing account
+      if (existingUser.googleId && !existingUser.password) {
+        console.log("Adding password to existing Google account")
+        const hashedPassword = await bcrypt.hash(password, 12)
+        
+        await users.updateOne(
+          { email },
+          { 
+            $set: { 
+              password: hashedPassword,
+              name: name || existingUser.name,
+              updatedAt: new Date()
+            }
+          }
+        )
+        
+        return NextResponse.json(
+          { 
+            message: "Password added to existing Google account successfully. You can now sign in with either method.", 
+            userId: existingUser._id 
+          },
+          { status: 201 }
+        )
+      }
     }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12)
 
-    // Create user
+    console.log("Creating new email user for:", email)
+    // Create new user
     const result = await users.insertOne({
       name,
       email,
       password: hashedPassword,
       createdAt: new Date(),
+      updatedAt: new Date()
     })
 
+    console.log("New email user created with ID:", result.insertedId)
     return NextResponse.json(
       { message: "User created successfully", userId: result.insertedId },
       { status: 201 }
@@ -73,7 +98,5 @@ export async function POST(request: NextRequest) {
       { error: "Internal server error" },
       { status: 500 }
     )
-  } finally {
-    await client.close()
   }
 }

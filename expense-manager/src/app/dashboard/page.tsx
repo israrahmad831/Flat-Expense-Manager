@@ -181,7 +181,7 @@ export default function Dashboard() {
                 <div className="text-center py-12">
                   <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No expenses yet</h3>
-                  <p className="text-gray-500 mb-4">Get started by adding your first expense</p>
+                  <p className="text-gray-700 mb-4">Get started by adding your first expense</p>
                   <Button onClick={() => setShowAddExpense(true)}>
                     <Plus className="h-4 w-4 mr-2" />
                     Add Your First Expense
@@ -192,19 +192,19 @@ export default function Dashboard() {
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                           Title
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                           Category
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                           Amount
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                           Date
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                           Participants
                         </th>
                       </tr>
@@ -218,7 +218,7 @@ export default function Dashboard() {
                                 {expense.title}
                               </div>
                               {expense.description && (
-                                <div className="text-sm text-gray-500">
+                                <div className="text-sm text-gray-600">
                                   {expense.description}
                                 </div>
                               )}
@@ -232,10 +232,10 @@ export default function Dashboard() {
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             ${expense.amount.toFixed(2)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                             {new Date(expense.date).toLocaleDateString()}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                             {expense.participants.length} people
                           </td>
                         </tr>

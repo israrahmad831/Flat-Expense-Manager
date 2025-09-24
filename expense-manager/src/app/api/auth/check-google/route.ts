@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { MongoClient } from "mongodb"
-
-const client = new MongoClient(process.env.MONGODB_URI!)
+import clientPromise from "@/lib/mongodb"
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,7 +13,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    await client.connect()
+    const client = await clientPromise
     const db = client.db()
     const users = db.collection("users")
 
@@ -52,7 +50,5 @@ export async function POST(request: NextRequest) {
       { error: "Failed to check account status" },
       { status: 500 }
     )
-  } finally {
-    await client.close()
   }
 }
