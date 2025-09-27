@@ -70,28 +70,80 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     const wallets = db.collection("wallets")
     const transactions = db.collection("transactions")
 
-    // Check if wallet has transactions
-    const transactionCount = await transactions.countDocuments({ walletId: params.id })
-    
-    if (transactionCount > 0) {
-      return NextResponse.json(
-        { 
-          error: "Cannot delete wallet with existing transactions. Please delete all transactions first or transfer them to another wallet." 
-        },
-        { status: 400 }
-      )
-    }
+    const { searchParams } = new URL(request.url)
+    const forceDelete = searchParams.get("force") === "true"
 
-    const result = await wallets.deleteOne({
+    // Check if wallet exists and belongs to user
+    const wallet = await wallets.findOne({
       _id: new ObjectId(params.id),
       userId: session.user.id
     })
 
-    if (result.deletedCount === 0) {
+    if (!wallet) {
       return NextResponse.json({ error: "Wallet not found" }, { status: 404 })
     }
 
-    return NextResponse.json({ message: "Wallet deleted successfully" })
+    // Check if wallet is default and if it's the only wallet
+    if (wallet.isDefault) {
+      const walletCount = await wallets.countDocuments({ userId: session.user.id })
+      if (walletCount === 1) {
+        return NextResponse.json({ 
+          error: "Cannot delete the only wallet. Create another wallet first." 
+        }, { status: 400 })
+      }
+    }
+
+    // Check for linked transactions
+    const linkedTransactions = await transactions.countDocuments({
+      $or: [
+        { walletId: params.id },
+        { toWalletId: params.id }
+      ]
+    })
+
+    if (linkedTransactions > 0 && !forceDelete) {
+      return NextResponse.json({
+        error: "Wallet has linked transactions",
+        hasTransactions: true,
+        transactionCount: linkedTransactions,
+        message: `This wallet has ${linkedTransactions} linked transaction(s). Deleting it will also delete all associated transactions. Add ?force=true to confirm deletion.`
+      }, { status: 409 })
+    }
+
+    // Start a database session for atomic operation
+    const mongoSession = client.startSession()
+
+    try {
+      await mongoSession.withTransaction(async () => {
+        // Delete all linked transactions if force delete
+        if (linkedTransactions > 0) {
+          await transactions.deleteMany({
+            $or: [
+              { walletId: params.id },
+              { toWalletId: params.id }
+            ]
+          })
+        }
+
+        // Delete the wallet
+        await wallets.deleteOne({ _id: new ObjectId(params.id) })
+
+        // If this was the default wallet, make another wallet default
+        if (wallet.isDefault) {
+          await wallets.updateOne(
+            { userId: session.user.id },
+            { $set: { isDefault: true, updatedAt: new Date() } }
+          )
+        }
+      })
+
+      return NextResponse.json({ 
+        message: "Wallet deleted successfully",
+        deletedTransactions: linkedTransactions
+      })
+    } finally {
+      await mongoSession.endSession()
+    }
   } catch (error) {
     console.error("Delete wallet error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

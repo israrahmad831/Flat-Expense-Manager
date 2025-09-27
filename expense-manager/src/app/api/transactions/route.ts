@@ -30,6 +30,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const walletId = searchParams.get("walletId")
     const type = searchParams.get("type") // income, expense, transfer
+    const search = searchParams.get("search") // search in title and description
+    const categoryId = searchParams.get("categoryId")
+    const startDate = searchParams.get("startDate")
+    const endDate = searchParams.get("endDate")
     const limit = parseInt(searchParams.get("limit") || "50")
     const page = parseInt(searchParams.get("page") || "1")
 
@@ -38,7 +42,7 @@ export async function GET(request: NextRequest) {
     const transactions = db.collection("transactions")
     const wallets = db.collection("wallets")
 
-    let query: any = { userId: session.user.id }
+    const query: Record<string, any> = { userId: session.user.id }
     
     if (walletId) {
       // Verify wallet belongs to user
@@ -54,6 +58,23 @@ export async function GET(request: NextRequest) {
 
     if (type) {
       query.type = type
+    }
+
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } }
+      ]
+    }
+
+    if (categoryId) {
+      query.categoryId = categoryId
+    }
+
+    if (startDate || endDate) {
+      query.date = {}
+      if (startDate) query.date.$gte = startDate
+      if (endDate) query.date.$lte = endDate
     }
 
     const skip = (page - 1) * limit
